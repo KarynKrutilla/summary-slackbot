@@ -1,0 +1,20 @@
+{
+  "name": "summary-slackbot",
+  "version": "1.0.0",
+  "description": "A slackbot that recaps the most popular posts from the last week",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KarynKrutilla/summary-slackbot.git"
+  },
+  "author": "Karyn Krutilla",
+  "license": "ISC",
+  "homepage": "https://github.com/KarynKrutilla/summary-slackbot#readme",
+  "dependencies": {
+    "@slack/web-api": "^6.4.0",
+    "dotenv": "^10.0.0"
+  }
+}
