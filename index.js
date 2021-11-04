@@ -8,6 +8,8 @@ const REACTION_SCORE = 1;
 const REPLY_SCORE = 3;
 // Controls how far back we look (in seconds)
 const NUM_DAYS = 7;
+// Controls which channel will receive the message
+const CHANNEL = 'summary-bot-testing';
 
 const SECONDS_PER_DAY = 24 * 60 * 60;
 const DATE_CUTOFF = new Date().getSeconds() - NUM_DAYS * SECONDS_PER_DAY;
@@ -31,7 +33,8 @@ const web = new WebClient(token);
                 .then(messageList => messageList
                     .filter(message =>
                         // ts field contains the timestamp, plus a unique message identifier - slice the ID off to filter
-                        Number(message.ts.split('.')[0]) > DATE_CUTOFF));
+                        // TODO - fix - older messages aren't filtered out
+                        Number(message.ts.split('.')[0]) > DATE_CUTOFF)); 
         } catch (error) {
             // We only want to summarize channels that opted into using this bot
             // All other channels will throw an error
@@ -74,29 +77,17 @@ const web = new WebClient(token);
         message.permalink = details.permalink;
     }
 
-    // Build message:
-    let post = 'Most popular messages from the last week: '
-    let count = 1;
-    for (const message of messageList) {
-        if (message && message.permalink) {
-            const details =
-                `\n\n *${count}.*\t*Number of comments:* ${message.numComments}`
-                + `\n\t\t*Number of reactions:* ${message.numEmojis}`
-                + `\n\t\t*Message:* ${message.text}`
-                + `\n\t\t<${message.permalink}|Link>`;
-            post = post.concat(details);
-            count++;
-        }
-    }
-
-    // TODO - Just log the results for now - add post back later
-    console.log(post);
     // Post!
-    // const result = await web.chat.postMessage({
-    //     text: post,
-    //     channel: "general",
-    // });
-    // console.log(`Successfully sent message ${result.ts} to general channel`);
+    let post = buildPost(topTen);
+    console.log('Posting message...');
+    console.log(post);
+
+    const result = await web.chat.postMessage({
+        text: 'Top ten posts from the last week',
+        channel: CHANNEL,
+        blocks: post
+    });
+    console.log(`Successfully sent message ${result.ts} to channel`);
 })();
 
 async function getAllChannels() {
@@ -148,4 +139,36 @@ async function getAllMessagesByChannel(channelId) {
         }
     }
     return result;
+}
+
+function buildPost(topMessages) {
+    let blocks = [];
+
+    // Intro:
+    blocks.push({
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "*Top ten posts from the last week:*"
+        }
+    });
+    blocks.push({
+        "type": "divider"
+    });
+
+    // Each message's details:
+    for (const message of topMessages) {
+        blocks.push({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": `*From:* <@${message.user}> \n\n *Message:* ${message.text} \n\n *Number of comments:* ${message.numComments} \n\n *Number of reactions:* ${message.numEmojis} \n\n <${message.permalink}|Link>`
+            }
+        });
+        blocks.push({
+            "type": "divider"
+        });
+    }
+
+    return blocks;
 }
