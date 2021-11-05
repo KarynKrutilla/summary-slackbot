@@ -1,7 +1,6 @@
 const dotenv = require('dotenv').config()
 const { WebClient } = require('@slack/web-api');
 
-// TODO - move to config file?
 // CONFIG:
 // Controls how we score each post to pick the most popular
 const REACTION_SCORE = 1;
@@ -11,8 +10,10 @@ const NUM_DAYS = 7;
 // Controls which channel will receive the message
 const CHANNEL = 'summary-bot-testing';
 
+
 const SECONDS_PER_DAY = 24 * 60 * 60;
-const DATE_CUTOFF = new Date().getSeconds() - NUM_DAYS * SECONDS_PER_DAY;
+const TODAY_IN_SECONDS = new Date().getTime() / 1000;
+const DATE_CUTOFF = TODAY_IN_SECONDS - (NUM_DAYS * SECONDS_PER_DAY);
 
 // Read a token from the environment variables
 const token = process.env.SLACK_TOKEN;
@@ -28,13 +29,7 @@ const web = new WebClient(token);
     for (const currentChannel of allChannels) {
         let channelMessages;
         try {
-            // Get all messages from the last week
-            channelMessages = await getAllMessagesByChannel(currentChannel.id)
-                .then(messageList => messageList
-                    .filter(message =>
-                        // ts field contains the timestamp, plus a unique message identifier - slice the ID off to filter
-                        // TODO - fix - older messages aren't filtered out
-                        Number(message.ts.split('.')[0]) > DATE_CUTOFF)); 
+            channelMessages = await getAllMessagesByChannel(currentChannel.id);
         } catch (error) {
             // We only want to summarize channels that opted into using this bot
             // All other channels will throw an error
@@ -43,7 +38,8 @@ const web = new WebClient(token);
                 console.log(`Bot not added to channel ${currentChannel.name}, continuing...`);
                 continue;
             } else {
-                console.log(error);
+                console.error(error);
+                throw error;
             }
         }
         for (const message of channelMessages) {
@@ -82,14 +78,21 @@ const web = new WebClient(token);
     console.log('Posting message...');
     console.log(post);
 
+    // blocks will include the formatted message sent to the channel, but it is recommended to include some text as well
+    // as it is used in places where the content cannot be rendered (ex. notifications)
     const result = await web.chat.postMessage({
         text: 'Top ten posts from the last week',
         channel: CHANNEL,
         blocks: post
     });
-    console.log(`Successfully sent message ${result.ts} to channel`);
+    console.log(`Successfully sent message ${result.ts} to ${CHANNEL}`);
 })();
 
+/**
+ * Gets all channels that haven't been archived
+ * The response to this call is paginated, so it could come back with a cursor
+ * If so, we have to pass the cursor back in and loop until we reach the last page
+ */
 async function getAllChannels() {
     let result = [];
     const response = await web.conversations.list(
@@ -113,13 +116,18 @@ async function getAllChannels() {
     return result;
 }
 
+/**
+ * Gets all messages for a given channel ID for the last week
+ * The response to this call is paginated, so it could come back with a cursor
+ * If so, we have to pass the cursor back in and loop until we reach the last page
+ */
 async function getAllMessagesByChannel(channelId) {
     let result = [];
     const response = await web.conversations.history(
         {
             channel: channelId,
             exclude_archived: true,
-            // oldest: ONE_WEEK
+            oldest: DATE_CUTOFF
         });
     if (response.messages) {
         result = result.concat(response.messages);
@@ -130,8 +138,8 @@ async function getAllMessagesByChannel(channelId) {
                     {
                         channel: channelId,
                         exclude_archived: true,
+                        oldest: DATE_CUTOFF,
                         cursor
-                        // oldest: ONE_WEEK
                     });
                 result = result.concat(response.messages);
                 cursor = response.response_metadata ? response.response_metadata.next_cursor : undefined;
@@ -141,6 +149,10 @@ async function getAllMessagesByChannel(channelId) {
     return result;
 }
 
+/**
+ * Format the given list of top messages to be posted
+ * https://api.slack.com/messaging/composing/layouts
+ */
 function buildPost(topMessages) {
     let blocks = [];
 
