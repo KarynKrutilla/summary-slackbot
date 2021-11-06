@@ -5,10 +5,10 @@ const { WebClient } = require('@slack/web-api');
 // Controls how we score each post to pick the most popular
 const REACTION_SCORE = 1;
 const REPLY_SCORE = 3;
-// Controls how far back we look (in seconds)
+// Controls how far back we look
 const NUM_DAYS = 7;
 // Controls which channel will receive the message
-const CHANNEL = 'summary-bot-testing';
+const CHANNEL = 'tldr';
 
 
 const SECONDS_PER_DAY = 24 * 60 * 60;
@@ -174,7 +174,9 @@ function buildPost(topMessages) {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": `*From:* <@${message.user}> \n\n *Message:* ${message.text} \n\n *Number of comments:* ${message.numComments} \n\n *Number of reactions:* ${message.numEmojis} \n\n <${message.permalink}|Link>`
+                "text": `*From:* <@${message.user}> \n\n *Message:* ${message.text} \n\n `
+                    //  *Number of comments:* ${message.numComments} \n\n *Number of reactions:* ${message.numEmojis} \n\n
+                    + `<${message.permalink}|Link>`
             }
         });
         blocks.push({
