@@ -3,13 +3,16 @@ const { WebClient } = require('@slack/web-api');
 
 // CONFIG:
 // Controls how we score each post to pick the most popular
-const REACTION_SCORE = 1;
-const REPLY_SCORE = 3;
+const REACTION_WEIGHT = 1;
+const REPLY_WEIGHT = 3;
 // Controls how far back we look
 const NUM_DAYS = 7;
 // Controls which channel will receive the message
 const CHANNEL = 'tldr';
+// Controls which channels to intentionally ignore
+const CHANNELS_TO_IGNORE = ['tldr','summary_bot_testing']
 
+////////////////////
 
 const SECONDS_PER_DAY = 24 * 60 * 60;
 const TODAY_IN_SECONDS = new Date().getTime() / 1000;
@@ -43,18 +46,18 @@ const web = new WebClient(token);
             }
         }
         for (const message of channelMessages) {
-            const numComments = message.reply_count ? message.reply_count : 0;
-            const numEmojis = message.reactions ? message.reactions.map(reaction => reaction.count).reduce((a, b) => a + b) : 0;
+            const numReplies = message.reply_count ? message.reply_count : 0;
+            const numReactions = message.reactions ? message.reactions.map(reaction => reaction.count).reduce((a, b) => a + b) : 0;
 
             messageList.push({
                 ...message,
                 // Needed later when fetching permalink
                 channel_id: currentChannel.id,
                 // Give each message a score based on replies + reactions
-                score: (numComments * REPLY_SCORE) + (numEmojis * REACTION_SCORE),
+                score: (numReplies * REPLY_WEIGHT) + (numReactions * REACTION_WEIGHT),
                 // Keep comment/reaction counts for post later
-                numComments,
-                numEmojis
+                numComments: numReplies,
+                numEmojis: numReactions
             });
         }
     }
@@ -78,8 +81,6 @@ const web = new WebClient(token);
     console.log('Posting message...');
     console.log(post);
 
-    // blocks will include the formatted message sent to the channel, but it is recommended to include some text as well
-    // as it is used in places where the content cannot be rendered (ex. notifications)
     const result = await web.chat.postMessage({
         text: 'Top ten posts from the last week',
         channel: CHANNEL,
@@ -89,7 +90,7 @@ const web = new WebClient(token);
 })();
 
 /**
- * Gets all channels that haven't been archived
+ * Gets all channels that haven't been archived and are not in the list of CHANNELS_TO_IGNORE
  * The response to this call is paginated, so it could come back with a cursor
  * If so, we have to pass the cursor back in and loop until we reach the last page
  */
@@ -100,7 +101,7 @@ async function getAllChannels() {
             exclude_archived: true
         });
     if (response.channels) {
-        result = result.concat(response.channels);
+        result = result.concat(response.channels.filter(channel => !CHANNELS_TO_IGNORE.includes(channel.name)));
         if (response.response_metadata.next_cursor) {
             let cursor = response.response_metadata.next_cursor;
             while (cursor) {
@@ -174,9 +175,10 @@ function buildPost(topMessages) {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": `*From:* <@${message.user}> \n\n *Message:* ${message.text} \n\n `
-                    //  *Number of comments:* ${message.numComments} \n\n *Number of reactions:* ${message.numEmojis} \n\n
-                    + `<${message.permalink}|Link>`
+                "text": `*From:* <@${message.user}>\n`
+                    + `\n*Message:* ${message.text}`
+                    //  \n*Number of comments:* ${message.numComments} \n\n *Number of reactions:* ${message.numEmojis} \n\n
+                    + `\n<${message.permalink}|Link>`
             }
         });
         blocks.push({
