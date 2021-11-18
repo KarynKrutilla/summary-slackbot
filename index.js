@@ -10,7 +10,7 @@ const NUM_DAYS = 7;
 // Controls which channel will receive the message
 const CHANNEL = 'tldr';
 // Controls which channels to intentionally ignore
-const CHANNELS_TO_IGNORE = ['tldr','summary_bot_testing']
+const CHANNELS_TO_IGNORE = ['tldr','summary-bot-testing']
 
 ////////////////////
 
@@ -77,11 +77,6 @@ const web = new WebClient(token);
     }
 
     // Post!
-    // let post = buildPost(topTen);
-    // console.log('Posting message...');
-    // console.log(post);
-
-
     await web.chat.postMessage({
         text: '*Top ten posts from the last week:*',
         channel: CHANNEL
@@ -89,33 +84,10 @@ const web = new WebClient(token);
     for (const message of topTen) {
         await web.chat.postMessage({
             text: `<${message.permalink}|Link>`,
-            // blocks: [{
-            //     "type": "section",
-            //     "text": {
-            //         "type": "mrkdwn",
-            //         "text": `<${message.permalink}|Link>`
-            //     }
-            // }],
-            // text: `<${message.permalink}|Link>`,
             channel: CHANNEL,
-            // as_user: true,
             unfurl_links: true
-            // unfurl_media: true,
-            // mrkdwn: true
-            // attachments: {
-            //     image_url: `${message.permalink}`,
-            //     thumb_url: `${message.permalink}`
-            // }
         });
     }
-
-    //     const result = await web.chat.postMessage({
-    //     text: 'beep boop',
-    //     // text: 'Top ten posts from the last week',
-    //     channel: CHANNEL,
-    //     // blocks: post
-    // });
-    // console.log(`Successfully sent message ${result.ts} to ${CHANNEL}`);
 })();
 
 /**
@@ -177,43 +149,4 @@ async function getAllMessagesByChannel(channelId) {
         }
     }
     return result;
-}
-
-/**
- * Format the given list of top messages to be posted
- * https://api.slack.com/messaging/composing/layouts
- */
-function buildPost(topMessages) {
-    let blocks = [];
-
-    // Intro:
-    blocks.push({
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "*Top ten posts from the last week:*"
-        }
-    });
-    blocks.push({
-        "type": "divider"
-    });
-
-    // Each message's details:
-    for (const message of topMessages) {
-        blocks.push({
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": `*From:* <@${message.user}>\n`
-                    + `\n*Message:* ${message.text}`
-                    //  \n*Number of comments:* ${message.numComments} \n\n *Number of reactions:* ${message.numEmojis} \n\n
-                    + `\n<${message.permalink}|Link>`
-            }
-        });
-        blocks.push({
-            "type": "divider"
-        });
-    }
-
-    return blocks;
 }
