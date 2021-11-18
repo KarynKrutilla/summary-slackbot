@@ -77,8 +77,11 @@ const web = new WebClient(token);
     }
 
     // Post!
+    const one_week_ago = new Date(DATE_CUTOFF * 1000).toDateString();
+    const today = new Date().toDateString();
+
     await web.chat.postMessage({
-        text: '*Top ten posts from the last week:*',
+        text: `*Top ten posts from ${one_week_ago} to ${today}:*`,
         channel: CHANNEL
     });
     for (const message of topTen) {
