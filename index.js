@@ -77,16 +77,45 @@ const web = new WebClient(token);
     }
 
     // Post!
-    let post = buildPost(topTen);
-    console.log('Posting message...');
-    console.log(post);
+    // let post = buildPost(topTen);
+    // console.log('Posting message...');
+    // console.log(post);
 
-    const result = await web.chat.postMessage({
-        text: 'Top ten posts from the last week',
-        channel: CHANNEL,
-        blocks: post
+
+    await web.chat.postMessage({
+        text: '*Top ten posts from the last week:*',
+        channel: CHANNEL
     });
-    console.log(`Successfully sent message ${result.ts} to ${CHANNEL}`);
+    for (const message of topTen) {
+        await web.chat.postMessage({
+            text: `<${message.permalink}|Link>`,
+            // blocks: [{
+            //     "type": "section",
+            //     "text": {
+            //         "type": "mrkdwn",
+            //         "text": `<${message.permalink}|Link>`
+            //     }
+            // }],
+            // text: `<${message.permalink}|Link>`,
+            channel: CHANNEL,
+            // as_user: true,
+            unfurl_links: true
+            // unfurl_media: true,
+            // mrkdwn: true
+            // attachments: {
+            //     image_url: `${message.permalink}`,
+            //     thumb_url: `${message.permalink}`
+            // }
+        });
+    }
+
+    //     const result = await web.chat.postMessage({
+    //     text: 'beep boop',
+    //     // text: 'Top ten posts from the last week',
+    //     channel: CHANNEL,
+    //     // blocks: post
+    // });
+    // console.log(`Successfully sent message ${result.ts} to ${CHANNEL}`);
 })();
 
 /**
