@@ -62,12 +62,22 @@ const web = new WebClient(token);
         }
     }
 
+    const important = messageList.filter(message => message.text.toUpperCase().endsWith('#IMPORTANT'));
+
     const topTen = messageList
         .sort((a, b) => b.score - a.score) // Sort by score
         .slice(0, 10); // Grab top 10
 
-    // Get each top message's permalink
+    // Get each message's permalink
     for (const message of topTen) {
+        const details = await web.chat.getPermalink(
+            {
+                channel: message.channel_id,
+                message_ts: message.ts
+            });
+        message.permalink = details.permalink;
+    }
+    for (const message of important) {
         const details = await web.chat.getPermalink(
             {
                 channel: message.channel_id,
@@ -79,6 +89,20 @@ const web = new WebClient(token);
     // Post!
     const one_week_ago = new Date(DATE_CUTOFF * 1000).toDateString();
     const today = new Date().toDateString();
+
+    if (important.length > 0) {
+        await web.chat.postMessage({
+            text: `*Important posts from ${one_week_ago} to ${today}:*`,
+            channel: CHANNEL
+        });
+        for (const message of important) {
+            await web.chat.postMessage({
+                text: `<${message.permalink}|Link>`,
+                channel: CHANNEL,
+                unfurl_links: true
+            });
+        }
+    }
 
     await web.chat.postMessage({
         text: `*Top ten posts from ${one_week_ago} to ${today}:*`,
