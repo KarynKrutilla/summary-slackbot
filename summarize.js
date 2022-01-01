@@ -2,6 +2,8 @@ const dotenv = require('dotenv').config()
 const { WebClient } = require('@slack/web-api');
 
 // CONFIG:
+// #general-chat ID
+const GENERAL_CHANNEL = 'C018WKJ5CHX';
 // Controls how we score each post to pick the most popular
 const REACTION_WEIGHT = 1;
 const REPLY_WEIGHT = 3;
@@ -27,13 +29,14 @@ module.exports = {
         (async () => {
             if (isUserRequest) {
                 await web.chat.postMessage({
-                    text: `*Received request to summarize the past ${numDays} days:*`,
+                    text: `*_Received request to summarize the past ${numDays} days:_*`,
                     channel: CHANNEL
                 });
             }
 
             const dateCutoff = TODAY_IN_SECONDS - (numDays * SECONDS_PER_DAY);
-            let messageList = [];
+            let generalMessageList = [];
+            let otherChannelMessageList = [];
 
             // Loop over all channels
             const allChannels = await getAllChannels();
@@ -57,27 +60,52 @@ module.exports = {
                     const numReplies = message.reply_count ? message.reply_count : 0;
                     const numReactions = message.reactions ? message.reactions.map(reaction => reaction.count).reduce((a, b) => a + b) : 0;
 
-                    messageList.push({
-                        ...message,
-                        // Needed later when fetching permalink
-                        channel_id: currentChannel.id,
-                        // Give each message a score based on replies + reactions
-                        score: (numReplies * REPLY_WEIGHT) + (numReactions * REACTION_WEIGHT),
-                        // Keep comment/reaction counts for post later
-                        numComments: numReplies,
-                        numEmojis: numReactions
-                    });
+                    if (currentChannel.id === GENERAL_CHANNEL) {
+                        generalMessageList.push({
+                            ...message,
+                            // Needed later when fetching permalink
+                            channel_id: currentChannel.id,
+                            // Give each message a score based on replies + reactions
+                            score: (numReplies * REPLY_WEIGHT) + (numReactions * REACTION_WEIGHT),
+                            // Keep comment/reaction counts for post later
+                            numComments: numReplies,
+                            numEmojis: numReactions
+                        });
+                    } else {
+                        otherChannelMessageList.push({
+                            ...message,
+                            // Needed later when fetching permalink
+                            channel_id: currentChannel.id,
+                            // Give each message a score based on replies + reactions
+                            score: (numReplies * REPLY_WEIGHT) + (numReactions * REACTION_WEIGHT),
+                            // Keep comment/reaction counts for post later
+                            numComments: numReplies,
+                            numEmojis: numReactions
+                        });
+                    }
                 }
             }
 
-            const important = messageList.filter(message => message.text.toUpperCase().endsWith('#IMPORTANT'));
+            let important = generalMessageList.filter(message => message.text.toUpperCase().endsWith('#IMPORTANT'));
+            important = important.concat(otherChannelMessageList.filter(message => message.text.toUpperCase().endsWith('#IMPORTANT')));
 
-            const topTen = messageList
+            const generalTopTen = generalMessageList
+                .sort((a, b) => b.score - a.score) // Sort by score
+                .slice(0, 10); // Grab top 10
+            const otherChannelTopTen = otherChannelMessageList
                 .sort((a, b) => b.score - a.score) // Sort by score
                 .slice(0, 10); // Grab top 10
 
             // Get each message's permalink
-            for (const message of topTen) {
+            for (const message of generalTopTen) {
+                const details = await web.chat.getPermalink(
+                    {
+                        channel: message.channel_id,
+                        message_ts: message.ts
+                    });
+                message.permalink = details.permalink;
+            }
+            for (const message of otherChannelTopTen) {
                 const details = await web.chat.getPermalink(
                     {
                         channel: message.channel_id,
@@ -100,7 +128,7 @@ module.exports = {
 
             if (important.length > 0) {
                 await web.chat.postMessage({
-                    text: `*Important posts from ${one_week_ago} to ${today}:*`,
+                    text: `*_Important posts from ${one_week_ago} to ${today}:_*`,
                     channel: CHANNEL
                 });
                 for (const message of important) {
@@ -113,10 +141,22 @@ module.exports = {
             }
 
             await web.chat.postMessage({
-                text: `*Top ten posts from ${one_week_ago} to ${today}:*`,
+                text: `*_Top ten posts in General channel from ${one_week_ago} to ${today}:_*`,
                 channel: CHANNEL
             });
-            for (const message of topTen) {
+            for (const message of generalTopTen) {
+                await web.chat.postMessage({
+                    text: `<${message.permalink}|Link>`,
+                    channel: CHANNEL,
+                    unfurl_links: true
+                });
+            }
+
+            await web.chat.postMessage({
+                text: `*_Top ten posts in other channels from ${one_week_ago} to ${today}:_*`,
+                channel: CHANNEL
+            });
+            for (const message of otherChannelTopTen) {
                 await web.chat.postMessage({
                     text: `<${message.permalink}|Link>`,
                     channel: CHANNEL,
