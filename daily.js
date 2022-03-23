@@ -18,4 +18,12 @@ const token = process.env.SLACK_TOKEN;
 
 // Initialize
 const web = new WebClient(token);
-summarizer.summarize(NUM_DAYS, false);
+const date = new Date();
+
+
+// Script starts up every day, but only run weekly summary on Sundays
+if (date.getDay() === 0) {
+    summarizer.summarize(NUM_DAYS, false);
+} else {
+    console.log('Skipping weekly summary - only run on Sundays')
+}
