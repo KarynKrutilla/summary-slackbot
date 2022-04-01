@@ -1,4 +1,6 @@
 const summarizer = require('./summarize.js');
+const reminder = require('./reminder.js');
+
 const dotenv = require('dotenv').config()
 const { WebClient } = require('@slack/web-api');
 
@@ -20,10 +22,11 @@ const token = process.env.SLACK_TOKEN;
 const web = new WebClient(token);
 const date = new Date();
 
+reminder.sendWaterReminder();
 
 // Script starts up every day, but only run weekly summary on Sundays
 if (date.getDay() === 0) {
     summarizer.summarize(NUM_DAYS, false);
 } else {
-    console.log('Skipping weekly summary - only run on Sundays')
+    console.log('Skipping weekly summary - only run on Sundays');
 }

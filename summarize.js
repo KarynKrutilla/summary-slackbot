@@ -10,7 +10,7 @@ const REPLY_WEIGHT = 3;
 // Controls which channel will receive the message
 const CHANNEL = 'tldr';
 // Controls which channels to intentionally ignore
-const CHANNELS_TO_IGNORE = ['tldr','summary-bot-testing']
+const CHANNELS_TO_IGNORE = ['tldr','bot-testing']
 
 ////////////////////
 
