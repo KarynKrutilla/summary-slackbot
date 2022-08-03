@@ -1,6 +1,7 @@
 const summarizer = require('./summarize.js');
 const reminder = require('./reminder.js');
 const birthdayNotifier = require('./birthdayNotifier.js');
+const childBirthdayNotifier = require('./childBirthdayNotifier');
 
 const dotenv = require('dotenv').config()
 const { WebClient } = require('@slack/web-api');
@@ -27,7 +28,9 @@ const date = new Date();
 
 // Run through all the tasks:
 
-birthdayNotifier.sendBirthdayNotification(date);
+birthdayNotifier.sendBirthdayNotification();
+
+childBirthdayNotifier.sendBirthdayNotification();
 
 reminder.sendWaterReminder();
 
