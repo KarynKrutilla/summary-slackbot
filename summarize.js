@@ -178,17 +178,18 @@ async function getAllChannels() {
     const response = await web.conversations.list(
         {
             exclude_archived: true,
-            limit: 120
+            limit: 125
         });
     if (response.channels) {
         result = result.concat(response.channels.filter(channel => !CHANNELS_TO_IGNORE.includes(channel.name)));
         if (response.response_metadata.next_cursor) {
             let cursor = response.response_metadata.next_cursor;
+            // TODO - fix this loop so limit can be lowered
             while (cursor) {
                 const channels = await web.conversations.list(
                     {
                         exclude_archived: true,
-                        limit: 120
+                        limit: 125
                     });
                 result.push(channels.channels);
                 cursor = channels.response_metadata ? channels.response_metadata.next_cursor : undefined;
