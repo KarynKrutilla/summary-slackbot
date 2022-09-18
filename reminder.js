@@ -16,8 +16,12 @@ const web = new WebClient(token);
 module.exports = {
     sendWaterReminder() {
         (async () => {
+//            await web.chat.postMessage({
+//                text: `Remember to drink water today! :water_cup:`,
+//                channel: CHANNEL
+//            });
             await web.chat.postMessage({
-                text: `Remember to drink water today! :water_cup:`,
+                text: `Daily gratitude check-in! I'm grateful for:`,
                 channel: CHANNEL
             });
         })();
