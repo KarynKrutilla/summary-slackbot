@@ -24,6 +24,10 @@ module.exports = {
                 text: `Daily gratitude check-in! I'm grateful for:`,
                 channel: CHANNEL
             });
+            await web.chat.postMessage({
+                text: `Daily goals check-in! What do you want to achieve today?`,
+                channel: CHANNEL
+            });
         })();
     }
 }
