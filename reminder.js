@@ -4,6 +4,7 @@ const { WebClient } = require('@slack/web-api');
 // CONFIG:
 const CHANNEL = 'C018WKJ5CHX'; // general
 // const CHANNEL = 'C02KY8DAU1L'; // bot_testing
+const BOOKS = 'C01BGEWM68H';
 
 ////////////////////
 
@@ -27,6 +28,17 @@ module.exports = {
             await web.chat.postMessage({
                 text: `Daily goals check-in! What do you want to achieve today?`,
                 channel: CHANNEL
+            });
+
+
+            // book messages
+            await web.chat.postMessage({
+                text: `What did you read in September?`,
+                channel: BOOKS
+            });
+            await web.chat.postMessage({
+                text: `Book of the month thread for September!`,
+                channel: BOOKS
             });
         })();
     }
