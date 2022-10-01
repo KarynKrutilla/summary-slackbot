@@ -31,15 +31,15 @@ module.exports = {
             });
 
 
-            // book messages
-            await web.chat.postMessage({
-                text: `What did you read in September?`,
-                channel: BOOKS
-            });
-            await web.chat.postMessage({
-                text: `Book of the month thread for September!`,
-                channel: BOOKS
-            });
+            // book messages - TODO add for last day of each month
+//            await web.chat.postMessage({
+//                text: `What did you read in September?`,
+//                channel: BOOKS
+//            });
+//            await web.chat.postMessage({
+//                text: `Book of the month thread for September!`,
+//                channel: BOOKS
+//            });
         })();
     }
 }
