@@ -8,12 +8,14 @@ const GENERAL_CHANNEL = 'C018WKJ5CHX';
 const REACTION_WEIGHT = 1;
 const REPLY_WEIGHT = 3;
 // Controls which channel will receive the message
-const CHANNEL = 'tldr';
+const CHANNEL = 'C02L82VJ9U6'; // tldr
+// const CHANNEL = 'C02KY8DAU1L'; // bot-testing
 // Controls which channels to intentionally ignore
 const CHANNELS_TO_IGNORE = ['tldr','bot-testing']
 
 ////////////////////
 
+const NUM_DAYS = 7;
 const SECONDS_PER_DAY = 24 * 60 * 60;
 const TODAY_IN_SECONDS = new Date().getTime() / 1000;
 
@@ -25,16 +27,9 @@ const token = process.env.SLACK_TOKEN;
 const web = new WebClient(token);
 
 module.exports = {
-    summarize(numDays, isUserRequest) {
+    summarize() {
         (async () => {
-            if (isUserRequest) {
-                await web.chat.postMessage({
-                    text: `*_Received request to summarize the past ${numDays} days:_*`,
-                    channel: CHANNEL
-                });
-            }
-
-            const dateCutoff = TODAY_IN_SECONDS - (numDays * SECONDS_PER_DAY);
+            const dateCutoff = TODAY_IN_SECONDS - (NUM_DAYS * SECONDS_PER_DAY);
             let generalMessageList = [];
             let otherChannelMessageList = [];
 

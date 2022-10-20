@@ -1,8 +1,8 @@
 {
   "name": "summary-slackbot",
-  "version": "2.5.2",
+  "version": "3.0.0",
   "description": "A slackbot that recaps the most popular posts from the last week",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "start": "node server.js",
     "daily": "node daily.js"

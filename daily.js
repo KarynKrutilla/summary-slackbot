@@ -28,11 +28,17 @@ const date = new Date();
 
 // Run through all the tasks:
 
-birthdayNotifier.sendBirthdayNotification();
+// TODO - book monthly posts
+// Check if last day of the month
+    // if so, post "what did you read this month" and book club posts
 
-childBirthdayNotifier.sendBirthdayNotification();
+//birthdayNotifier.sendBirthdayNotification();
 
-reminder.sendWaterReminder();
+//childBirthdayNotifier.sendBirthdayNotification();
+
+//reminder.sendWaterReminder();
+
+console.log('here');
 
 // Script starts up every day, but only run weekly summary on Sundays
 if (date.getDay() === 0) {
