@@ -18,10 +18,6 @@ const date = new Date();
 exports.handler = (event, context, callback) => {
             (async () => {
 
-    //            await web.chat.postMessage({
-    //                text: `Remember to drink water today! :water_cup:`,
-    //                channel: CHANNEL
-    //            });
                 await web.chat.postMessage({
                     text: `Daily gratitude check-in! I'm grateful for:`,
                     channel: CHANNEL

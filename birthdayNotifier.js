@@ -35,13 +35,6 @@ const emoji_list = [
 module.exports = {
     sendBirthdayNotification() {
         (async () => {
-//            const client = new Client({
-//                connectionString: process.env.DATABASE_URL,
-//                ssl: {
-//                    rejectUnauthorized: false
-//                }
-//            });
-//            client.connect();
             const docClient = new AWS.DynamoDB.DocumentClient();
             const date = new Date();
             const value = `${date.getMonth() + 1}/${date.getDate()}`;
@@ -62,23 +55,19 @@ module.exports = {
                 return err;
             }
 
-            console.log(data);
-
-//            let users = await getRows(docClient);
             for (const user of data.Items) {
-                console.log(user);
                 const random_emoji = emoji_list[Math.floor(Math.random() * emoji_list.length)];
 
                 // Children are in the db with ID parentId-0
                 // So we know which message to use based on whether ID contains '-'
                 const split = user.id.split('-');
                 const userId = split[0];
-                if(split.length === 1) {
+                if (split.length === 1) { // parent
                     await web.chat.postMessage({
                         text: `Happy birthday <@${userId}>! ${random_emoji}`,
                         channel: CHANNEL
                     });
-                } else {
+                } else { // child
                     const age = getAge(user.birth_year);
                     await web.chat.postMessage({
                         text: `Happy ${age} birthday ${user.name}! ${random_emoji} (<@${userId}>)`,
@@ -107,18 +96,3 @@ function getAge(birth_year) {
     }
     return age + "th";
 }
-
-
-
-//async function getRows(docClient) {
-//    date = new Date();
-//    return client
-//        .query(`SELECT * FROM birthdays where birthday = '${date.getMonth() + 1}/${date.getDate()}';`)
-//        .then(res => {
-//            let users = [];
-//            for (let row of res.rows) {
-//                users = users.concat(row);
-//            }
-//            return users;
-//        }).finally(() => client.end());
-//}
