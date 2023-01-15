@@ -2,6 +2,7 @@ const dotenv = require('dotenv').config()
 const { WebClient } = require('@slack/web-api');
 const birthdayNotifier = require('./birthdayNotifier.js');
 const summarizer = require('./summarize.js');
+const vlogger = require('./vlog');
 
 // CONFIG:
 const CHANNEL = 'C018WKJ5CHX'; // general
@@ -29,6 +30,7 @@ exports.handler = (event, context, callback) => {
         });
 
         birthdayNotifier.sendBirthdayNotification();
+        vlogger.postVlogs();
 
         // Script starts up every day, but only run weekly summary on Sundays
         if (isSunday(date)) {
