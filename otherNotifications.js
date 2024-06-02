@@ -4,6 +4,7 @@ const AWS = require('aws-sdk');
 
 // CONFIG:
 const CHANNEL = 'C018WKJ5CHX'; // general
+const FOOD_CHANNEL = 'C018J6Q0W4A';
 // const CHANNEL = 'C02KY8DAU1L'; // bot_testing
 
 ////////////////////
@@ -25,6 +26,10 @@ module.exports = {
             await web.chat.postMessage({
                 text: `Daily goals check-in! What do you want to achieve today?`,
                 channel: CHANNEL
+            });
+            await web.chat.postMessage({
+                text: `What's for dinner tonight?`,
+                channel: FOOD_CHANNEL
             });
 
             // Send these messages only on the date specified

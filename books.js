@@ -4,7 +4,8 @@ const AWS = require('aws-sdk');
 
 // CONFIG:
 const BOOKS = 'C01BGEWM68H'; // books
-// const BOOKS = 'C02KY8DAU1L'; // bot_testing
+const KIDS_BOOKS = 'C018WQXGHTR'; // read-baby-read
+// const BOOKS = 'C02KY8DAU1L'; // bot-testing
 
 ////////////////////
 
@@ -26,7 +27,7 @@ module.exports = {
 
                 const messageText =
                     `The book of the month for ${monthName} is ${bookDetails.bookName} by ${bookDetails.bookAuthor}. `
-                    + `Post your thoughts in this thread!`
+                    + `Share your thoughts in this thread!`
 
                 const messageResult = await web.chat.postMessage({
                     text: messageText,
@@ -36,6 +37,7 @@ module.exports = {
                 await persistThreadId(monthName, messageResult.ts);
             }
             // At the end of the month, send monthly checkin and post another message to the book-of-the-month thread
+            // Also send monthly checkin to kids books channel
             if (isLastDayOfMonth(date)) {
                 const monthName = date.toLocaleString('default', { month: 'long' });
                 const bookDetails = await getBookDetails(monthName);
@@ -43,6 +45,10 @@ module.exports = {
                 await web.chat.postMessage({
                     text: `What did you read in ${monthName}?`,
                     channel: BOOKS
+                });
+                await web.chat.postMessage({
+                    text: `What did your kids read in ${monthName}?`,
+                    channel: KIDS_BOOKS
                 });
                 await web.chat.postMessage({
                     text: `Share your thoughts here for ${monthName}'s book of the month, ${bookDetails.bookName}!`,
