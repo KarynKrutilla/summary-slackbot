@@ -20,14 +20,6 @@ module.exports = {
         (async () => {
             // Send these messages every day
             await web.chat.postMessage({
-                text: `Daily gratitude check-in! I'm grateful for:`,
-                channel: CHANNEL
-            });
-            await web.chat.postMessage({
-                text: `Daily goals check-in! What do you want to achieve today?`,
-                channel: CHANNEL
-            });
-            await web.chat.postMessage({
                 text: `What's for dinner tonight?`,
                 channel: FOOD_CHANNEL
             });
