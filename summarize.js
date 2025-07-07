@@ -165,65 +165,27 @@ module.exports = {
 
 /**
  * Gets all channels that haven't been archived and are not in the list of CHANNELS_TO_IGNORE
- * The response to this call is paginated, so it could come back with a cursor
- * If so, we have to pass the cursor back in and loop until we reach the last page
  */
 async function getAllChannels() {
     let result = [];
-    const response = await web.conversations.list(
-        {
-            exclude_archived: true,
-            limit: 150
-        });
-    if (response.channels) {
-        result = result.concat(response.channels.filter(channel => !CHANNELS_TO_IGNORE.includes(channel.name)));
-        if (response.response_metadata.next_cursor) {
-            let cursor = response.response_metadata.next_cursor;
-            // TODO - fix this loop so limit can be lowered
-            while (cursor) {
-                const channels = await web.conversations.list(
-                    {
-                        exclude_archived: true,
-                        limit: 150,
-                        cursor
-                    });
-                result.push(channels.channels);
-                cursor = channels.response_metadata ? channels.response_metadata.next_cursor : undefined;
-            }
-        }
+    for await (const page of web.paginate('conversations.list', {exclude_archived: true, limit: 100})) {
+        result = result.concat(page.channels.filter(channel => !CHANNELS_TO_IGNORE.includes(channel.name)));
     }
     return result;
 }
 
 /**
  * Gets all messages for a given channel ID for the last week
- * The response to this call is paginated, so it could come back with a cursor
- * If so, we have to pass the cursor back in and loop until we reach the last page
  */
 async function getAllMessagesByChannel(channelId, dateCutoff) {
+
     let result = [];
-    const response = await web.conversations.history(
+    for await(const page of web.paginate('conversations.history',
         {
             channel: channelId,
             exclude_archived: true,
             oldest: dateCutoff
-        });
-    if (response.messages) {
-        result = result.concat(response.messages);
-        if (response.response_metadata.next_cursor) {
-            let cursor = response.response_metadata.next_cursor;
-            while (cursor) {
-                const response = await web.conversations.history(
-                    {
-                        channel: channelId,
-                        exclude_archived: true,
-                        oldest: dateCutoff,
-                        cursor
-                    });
-                result = result.concat(response.messages);
-                cursor = response.response_metadata ? response.response_metadata.next_cursor : undefined;
-            }
-        }
+        })) {
+        result = result.concat(page.messages);
     }
-    return result;
 }
