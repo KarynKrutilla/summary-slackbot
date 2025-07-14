@@ -188,4 +188,5 @@ async function getAllMessagesByChannel(channelId, dateCutoff) {
         })) {
         result = result.concat(page.messages);
     }
+    return result;
 }
